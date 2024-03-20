@@ -106,7 +106,7 @@ async def scheduler():
         now = datetime.now(UTC_PLUS_3) 
         if time(9, 0) <= now.time() <= time(20, 0):
             await fetch_visa_appointments(now)
-            next_run = now + timedelta(minutes=1)
+            next_run = now + timedelta(minutes=15)
             sleep_seconds = (next_run - now).total_seconds()
             logging.info("Sonraki Çalışma: " + next_run.strftime("%H:%M:%S"))
         else:
