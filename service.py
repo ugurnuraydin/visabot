@@ -39,7 +39,7 @@ async def send_telegram_message(text,chatType):
        await bot.send_message(chat_id=TELEGRAM_KISISEL_CHAT_ID, text=text, parse_mode='Markdown') 
        logging.info('Kişisel Mesaj Gönderildi.')
 
-async def fetch_visa_appointments():
+async def fetch_visa_appointments(now):
     logging.info('Randevu Kontrol Akışı Başladı --' + now.strftime("%H:%M:%S"))
     global lastMessage
     lastMessage = load_last_message()
@@ -91,34 +91,32 @@ async def fetch_visa_appointments():
         final_message = "\n\n".join(messages)
         logging.info('Mesaj Farkı Bulundu, Son Mesaj:\n' + final_message)
         if sonucListe and messages:
-            await send_telegram_message(final_message,PERSONAL)
+            await send_telegram_message(final_message,GROUP)
+            return None
     else:
-        logging.info('Dandevularda Değişiklik yok, mesaj gönderilmedi')
+        logging.info('Randevularda Değişiklik yok, mesaj gönderilmedi')
+        return None
 
 
     
 
 async def scheduler():
     while True:
-        # Saat şu an 09:00 ile 22:00 arasında mı kontrol et
-        if time(9, 0) <= now.time() <= time(22, 0):
-            await fetch_visa_appointments()
-            # Bir sonraki çalışma için 15 dakika sonrasına ayarla
-            next_run = now + timedelta(minutes=5)
-            logging.info("Sonraki Çalışma " + next_run.strftime("%H:%M:%S"))
-            sleep_seconds = (next_run - datetime.now(UTC_PLUS_3)).total_seconds()
-        else:
-            # 22:00'dan sonra bir sonraki günün 9:00'una kadar bekle
-            if now.time() > time(22, 0):
-                tomorrow = now + timedelta(days=1)
-                next_run = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
-            # 00:00'dan önce 9:00'a kadar bekle
-            else:
-                next_run = now.replace(hour=9, minute=0, second=0, microsecond=0)
+        sleep_seconds = None
+        now = datetime.now(UTC_PLUS_3) 
+        if time(9, 0) <= now.time() <= time(20, 0):
+            await fetch_visa_appointments(now)
+            next_run = now + timedelta(minutes=1)
             sleep_seconds = (next_run - now).total_seconds()
-        
+            logging.info("Sonraki Çalışma: " + next_run.strftime("%H:%M:%S"))
+        else:
+            tomorrow = now + timedelta(days=1)
+            next_run = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
+            sleep_seconds = (next_run - now).total_seconds()
+            logging.info("Servis Duraklatıldı, Sonraki Çalışma Yarın: " + next_run.strftime("%H:%M:%S"))
+        logging.info('___________________________________________________________________\n')
         await asyncio.sleep(sleep_seconds)
-        logging.info('___________________________________________________________________')
+        
 
 
 
