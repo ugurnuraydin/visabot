@@ -38,7 +38,7 @@ async def send_telegram_message(text,chatType = "REST"):
         await bot.send_message(chat_id=TELEGRAM_KISISEL_CHAT_ID, text=text, parse_mode='Markdown')
         logging.info('Kişisel Mesaj Gönderildi.')
     else:
-        if time(9, 0) <= now.time() <= time(23, 0) and now.minute % 15 == 0:
+        if time(9, 0) <= now.time() <= time(20, 0) and now.minute % 15 == 0:
             await bot.send_message(chat_id=TELEGRAM_GROUP_CHAT_ID, text=text, parse_mode='Markdown') 
             logging.info('Gruba Mesaj Gönderildi.')
             
