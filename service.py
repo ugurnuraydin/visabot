@@ -38,12 +38,14 @@ async def send_telegram_message(text,chatType = "REST"):
         await bot.send_message(chat_id=TELEGRAM_KISISEL_CHAT_ID, text=text, parse_mode='Markdown')
         logging.info('Kişisel Mesaj Gönderildi.')
     else:
-        if time(9, 0) <= now.time() <= time(20, 0) and now.minute % 15 == 0:
-            await bot.send_message(chat_id=TELEGRAM_GROUP_CHAT_ID, text=text, parse_mode='Markdown') 
-            logging.info('Gruba Mesaj Gönderildi.')
-            
         await bot.send_message(chat_id=TELEGRAM_BERKCAN_CHAT_ID, text=text, parse_mode='Markdown') 
         logging.info('Berkcana Mesaj Gönderildi.')
+        
+        if time(9, 0) <= now.time() <= time(20, 0):
+            await bot.send_message(chat_id=TELEGRAM_GROUP_CHAT_ID, text=text, parse_mode='Markdown')
+            logging.info('Gruba Mesaj Gönderildi.')
+            
+        
         
         
 async def fetch_visa_appointments(now):
@@ -117,21 +119,16 @@ async def fetch_visa_appointments(now):
     
 
 async def scheduler():
-    while True:
-        sleep_seconds = None
-        now = datetime.now(UTC_PLUS_3) 
-        if time(6, 0) <= now.time() <= time(23, 0):
-            await fetch_visa_appointments(now)
-            next_run = now + timedelta(minutes=5)
-            sleep_seconds = (next_run - now).total_seconds()
-            logging.info("Sonraki Çalışma: " + next_run.strftime("%H:%M:%S"))
-        else:
-            tomorrow = now + timedelta(days=1)
-            next_run = tomorrow.replace(hour=6, minute=0, second=0, microsecond=0)
-            sleep_seconds = (next_run - now).total_seconds()
-            logging.info("Servis Duraklatıldı, Sonraki Çalışma Yarın: " + next_run.strftime("%H:%M:%S"))
+     while True:
+        now = datetime.now(UTC_PLUS_3)  # Şu anki zamanı UTC+3 olarak al
+        await fetch_visa_appointments(now)  # Şu anki zamanı fonksiyona argüman olarak gönder
+        next_run = now + timedelta(minutes=10)  # Bir sonraki çalışma için 10 dakika sonrasını hesapla
+        sleep_seconds = (next_run - datetime.now(UTC_PLUS_3)).total_seconds()  # Bekleme süresini hesapla
+
+        logging.info("Sonraki Çalışma: " + next_run.strftime("%H:%M:%S"))
         logging.info('___________________________________________________________________\n')
-        await asyncio.sleep(sleep_seconds)
+
+        await asyncio.sleep(sleep_seconds)  # Belirlenen süre kadar bekle
         
 
 
