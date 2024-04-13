@@ -84,6 +84,7 @@ def filter_appointments(data, category):
     elif category == "berkcan":
         return [item for item in data if item["source_country"] == "Turkiye" and item["mission_country"] in ["France", "Czechia", "Austria", "Poland", "Belgium", "Netherlands"] and item["appointment_date"] is not None]
     elif category == "personal":
+        # return [item for item in data if item["source_country"] == "Turkiye" and (item["mission_country"] == "Belgium" or "ankara" in item['center_name'].lower()) and "tourism" in item["visa_subcategory"].lower() and item["appointment_date"] is not None]
         return [item for item in data if item["source_country"] == "Turkiye" and item["mission_country"] == "Belgium" and "tourism" in item["visa_subcategory"].lower() and item["appointment_date"] is not None]
 
 
@@ -96,7 +97,7 @@ def format_message(item, category):
         return f"<u><b>Ülke:</b></u> {item['mission_country']},\n<u><b>Kategori:</b></u> {item['visa_category']},\n<u><b>Tip:</b></u> {item['visa_subcategory']},\n<u><b>Merkez:</b></u> {item['center_name']},\n<u><b>Date:</b></u> {appointment_date}"
     
     if category == "personal":
-        return f"<b><u>BELÇİKA İÇİN RANDEVU BULUNDU!!</u></b>\n<b><u>Ülke:</u></b> {item['mission_country']}, <b><u>Merkez:</u></b> {item['center_name']}, <b><u>Date:</u></b> {appointment_date}"
+        return f"<b><u>BELÇİKA İÇİN RANDEVU BULUNDU!!</u></b>\n<b><u>Ülke:</u></b> {item['mission_country']},\n<b><u>Merkez:</u></b> {item['center_name']},\n<b><u>Date:</u></b> {appointment_date}\n\nhttps://visa.vfsglobal.com/tur/tr/bel/login"
 
 async def notify_users(category, message, now):
     chat_ids = {
