@@ -19,7 +19,7 @@ config = {
     "telegram_belgium_chat_id": '-4238889616',
     "telegram_france_chat_id": '-4267407232',
     "telegram_netherlands_chat_id": '-4277752437',
-    "telegram_slovenia_chat_id": '-4176399641',
+    "telegram_slovenia_chat_id": '-1002218773507',
     "utc_plus_3": timezone(timedelta(hours=3))
 }
 
