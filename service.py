@@ -20,6 +20,17 @@ config = {
     "telegram_france_chat_id": '-4267407232',
     "telegram_netherlands_chat_id": '-4277752437',
     "telegram_slovenia_chat_id": '-1002218773507',
+    "telegram_fransa_sener_chat_id": '-1002186778213',
+    "chat_names": {
+        '-1002051631354': "Genel Grup",
+        '1418776096': "Kişisel Chat",
+        '-4253313815': "Çek Cumhuriyeti",
+        '-4238889616': "Belçika",
+        '-4267407232': "Fransa",
+        '-4277752437': "Hollanda",
+        '-1002218773507': "Slovenya",
+        '-1002186778213': "Fransa Şener"
+    },
     "utc_plus_3": timezone(timedelta(hours=3))
 }
 
@@ -27,16 +38,19 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 bot = Bot(token=config["telegram_bot_token"])
 
 def reset_lists():
-    global czechia_list, belgium_list, france_list, netherlands_list, slovenia_list
+    global czechia_list, belgium_list, france_list, netherlands_list, slovenia_list, france_sener_list
     czechia_list = []
     belgium_list = []
     france_list = []
+    france_sener_list = []
     netherlands_list = []
     slovenia_list = []
 
 async def send_message(chat_id, text, now):
     await bot.send_message(chat_id=chat_id, text=text, parse_mode='HTML')
-    logging.info(f'Message sent to general group at {now.strftime("%H:%M:%S")}')
+    chat_name = config["chat_names"].get(chat_id, "bilinmeyen grup")  # Chat adını al, eğer bulunamazsa "bilinmeyen grup" yaz
+    logging.info(f'Message sent to {chat_name} at {now.strftime("%H:%M:%S")}')
+
 
         
 async def fetch_and_notify(now):
@@ -58,15 +72,16 @@ async def fetch_and_notify(now):
     await process_appointments(data, now)
 
     
-async def process_appointments(data,now):
+async def process_appointments(data, now):
     filter_appointments(data)
     final_message_czechia = "\n\n".join(format_message(item) for item in czechia_list)
     final_message_belgium = "\n\n".join(format_message(item) for item in belgium_list)
     final_message_france = "\n\n".join(format_message(item) for item in france_list)
+    final_message_france_sener = "\n\n".join(format_message(item) for item in france_sener_list)
     final_message_netherlands = "\n\n".join(format_message(item) for item in netherlands_list)
     final_message_slovenia = "\n\n".join(format_message(item) for item in slovenia_list)
     
-    await notify_users(final_message_czechia, final_message_belgium, final_message_france, final_message_netherlands, final_message_slovenia, now)
+    await notify_users(final_message_czechia, final_message_belgium, final_message_france, final_message_netherlands, final_message_slovenia, final_message_france_sener, now)
 
         
         
@@ -80,6 +95,7 @@ def filter_appointments(data):
                 belgium_list.append(item)
             elif item["mission_country"] == "France" and (visa_subcategory == "Short Term Standard" or visa_subcategory == "Tourism/Family visit"):
                 france_list.append(item)
+                france_sener_list.append(item)
             elif item["mission_country"] == "Netherlands" and "tourism" in visa_subcategory.lower():
                 netherlands_list.append(item)
             elif item["mission_country"] == "Slovenia" and "tourism" in visa_subcategory.lower():
@@ -91,13 +107,14 @@ def format_message(item):
     appointment_date = datetime.fromisoformat(item['appointment_date']).strftime('%d-%m-%Y')
     return f"<u><b>Ülke:</b></u> {item['mission_country']},\n<u><b>Kategori:</b></u> {item['visa_category']},\n<u><b>Tip:</b></u> {item['visa_subcategory']},\n<u><b>Merkez:</b></u> {item['center_name']},\n<u><b>Date:</b></u> {appointment_date}"
 
-async def notify_users(czechia_message, belgium_message, france_message, netherlands_message, slovenia_message, now):
+async def notify_users(czechia_message, belgium_message, france_message, netherlands_message, slovenia_message, france_sener_message, now):
     chat_messages = {
         config["telegram_czech_chat_id"]: czechia_message,
         config["telegram_belgium_chat_id"]: belgium_message,
         config["telegram_france_chat_id"]: france_message,
         config["telegram_netherlands_chat_id"]: netherlands_message,
-        config["telegram_slovenia_chat_id"]: slovenia_message
+        config["telegram_slovenia_chat_id"]: slovenia_message,
+        config["telegram_fransa_sener_chat_id"]: france_sener_message  # Yeni eklenen chat ID
     }
     for chat_id, message in chat_messages.items():
         if message:  # Eğer mesaj boş değilse gönder
