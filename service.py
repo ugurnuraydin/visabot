@@ -4,38 +4,42 @@ from datetime import datetime, time, timedelta, timezone
 from telegram import Bot
 from itertools import groupby
 from operator import itemgetter
+from dotenv import load_dotenv
+import os
 import json
 import logging
 
+# Ortam değişkenlerini yükleyin
+load_dotenv(dotenv_path="config.env")
 
 # Yapılandırma
 config = {
-    "telegram_bot_token": '6829298339:AAEJjoijTUf8DyaERraNevg9S9jHIRosMhg',
-    
-    "telegram_group_chat_id": '-1002051631354',
-    "telegram_personal_chat_id": '1418776096',
-    
-    "telegram_czech_chat_id": '-4253313815',
-    "telegram_belgium_chat_id": '-4238889616',
-    "telegram_france_chat_id": '-4267407232',
-    "telegram_netherlands_chat_id": '-4277752437',
-    "telegram_slovenia_chat_id": '-1002218773507',
-    "telegram_fransa_sener_chat_id": '-1002186778213',
-    "telegram_dumbs_chat_id": '-1002242628854',
+    "telegram_bot_token": os.getenv('TELEGRAM_BOT_TOKEN'),
+    "telegram_group_chat_id": os.getenv('TELEGRAM_GROUP_CHAT_ID'),
+    "telegram_personal_chat_id": os.getenv('TELEGRAM_PERSONAL_CHAT_ID'),
+    "telegram_czech_chat_id": os.getenv('TELEGRAM_CZECH_CHAT_ID'),
+    "telegram_belgium_chat_id": os.getenv('TELEGRAM_BELGIUM_CHAT_ID'),
+    "telegram_france_chat_id": os.getenv('TELEGRAM_FRANCE_CHAT_ID'),
+    "telegram_netherlands_chat_id": os.getenv('TELEGRAM_NETHERLANDS_CHAT_ID'),
+    "telegram_slovenia_chat_id": os.getenv('TELEGRAM_SLOVENIA_CHAT_ID'),
+    "telegram_fransa_sener_chat_id": os.getenv('TELEGRAM_FRANSA_SENER_CHAT_ID'),
+    "telegram_dumbs_chat_id": os.getenv('TELEGRAM_DUMBS_CHAT_ID'),
     "chat_names": {
-        '-1002051631354': "Genel Grup",
-        '1418776096': "Kişisel Chat",
-        '-4253313815': "Çek Cumhuriyeti",
-        '-4238889616': "Belçika",
-        '-4267407232': "Fransa",
-        '-4277752437': "Hollanda",
-        '-1002218773507': "Slovenya",
-        '-1002186778213': "Fransa Şener",
-        '-1002242628854': "Dumbs"
+        os.getenv('TELEGRAM_GROUP_CHAT_ID'): "Genel Grup",
+        os.getenv('TELEGRAM_PERSONAL_CHAT_ID'): "Kişisel Chat",
+        os.getenv('TELEGRAM_CZECH_CHAT_ID'): "Çek Cumhuriyeti",
+        os.getenv('TELEGRAM_BELGIUM_CHAT_ID'): "Belçika",
+        os.getenv('TELEGRAM_FRANCE_CHAT_ID'): "Fransa",
+        os.getenv('TELEGRAM_NETHERLANDS_CHAT_ID'): "Hollanda",
+        os.getenv('TELEGRAM_SLOVENIA_CHAT_ID'): "Slovenya",
+        os.getenv('TELEGRAM_FRANSA_SENER_CHAT_ID'): "Fransa Şener",
+        os.getenv('TELEGRAM_DUMBS_CHAT_ID'): "Dumbs"
     },
     "utc_plus_3": timezone(timedelta(hours=3))
     
 }
+print(f"Telegram Bot Token: {config["telegram_bot_token"]}")  # Token'ın çıktısını kontrol edin
+
 
 # Global last_message_files tanımı
 last_message_files = {
@@ -57,12 +61,6 @@ def reset_lists():
     dumbs_list = []
     general_list = []
 
-async def send_message(chat_id, text, now):
-    await bot.send_message(chat_id=chat_id, text=text, parse_mode='HTML')
-    chat_name = config["chat_names"].get(chat_id, "bilinmeyen grup")  # Chat adını al, eğer bulunamazsa "bilinmeyen grup" yaz
-    logging.info(f'Message sent to {chat_name} at {now.strftime("%H:%M:%S")}')
-
-
 def load_json(filename):
     try:
         with open(filename, "r") as file:
@@ -73,8 +71,7 @@ def load_json(filename):
 def save_json(filename, data):
     with open(filename, "w") as file:
         json.dump(data, file)
-            
-            
+
 async def send_message(chat_id, text, now):
     chat_name = config["chat_names"].get(chat_id, chat_id)  # chat_id için grup ismini al, bulunamazsa chat_id'yi kullan
 
@@ -89,7 +86,7 @@ async def send_message(chat_id, text, now):
         # Diğer id'ler için saat kısıtlaması olmadan mesaj gönder
         await bot.send_message(chat_id=chat_id, text=text, parse_mode='HTML')
         logging.info(f'Message sent to {chat_name} at {now.strftime("%H:%M:%S")}')
-        
+
 async def fetch_and_notify(now):
     logging.info('Checking appointments --' + now.strftime("%H:%M:%S"))
     url = "https://api.schengenvisaappointments.com/api/visa-list/"
@@ -120,11 +117,18 @@ async def process_appointments(data, now):
     final_message_dumbs = "\n\n".join(format_message(item) for item in dumbs_list)
     final_message_general = "\n\n".join(format_message(item) for item in general_list)
     
-    
-    await notify_users(final_message_czechia, final_message_belgium, final_message_france, final_message_netherlands, final_message_slovenia, final_message_france_sener,final_message_dumbs, final_message_general, now)
+    await notify_users(
+        final_message_czechia, 
+        final_message_belgium, 
+        final_message_france, 
+        final_message_netherlands, 
+        final_message_slovenia, 
+        final_message_france_sener, 
+        final_message_dumbs, 
+        final_message_general, 
+        now
+    )
 
-        
-        
 def filter_appointments(data):
     for item in data:
         if item["source_country"] == "Turkiye" and item["appointment_date"] is not None:
@@ -149,24 +153,27 @@ def filter_appointments(data):
             if (item["mission_country"] in ["Netherlands", "Belgium"]) and ("ankara" in item["center_name"].lower() or "istanbul" in item["center_name"].lower()) and "tourism" in visa_subcategory.lower():
                 dumbs_list.append(item)
                 
-            if ("ankara" in item["center_name"].lower() or "istanbul" in item["center_name"].lower() or "izmir" in item["center_name"].lower()) and "tourism" in visa_subcategory.lower() or "short term standard" in visa_subcategory.lower():
+            if ("ankara" in item["center_name"].lower() or "istanbul" in item["center_name"].lower() or "izmir" in item["center_name"].lower()) and ("tourism" in visa_subcategory.lower() or "short term standard" in visa_subcategory.lower()):
                 general_list.append(item)
     
     # general_list'i item["mission_country"]'ye göre alfabetik olarak sıralayın
     general_list.sort(key=lambda x: x["mission_country"])
 
-        
-        
-
-            
-
-
-
 def format_message(item):
     appointment_date = datetime.fromisoformat(item['appointment_date']).strftime('%d-%m-%Y')
     return f"<u><b>Ülke:</b></u> {item['mission_country']},\n<u><b>Kategori:</b></u> {item['visa_category']},\n<u><b>Tip:</b></u> {item['visa_subcategory']},\n<u><b>Merkez:</b></u> {item['center_name']},\n<u><b>Date:</b></u> {appointment_date}"
 
-async def notify_users(czechia_message, belgium_message, france_message, netherlands_message, slovenia_message, france_sener_message, dumbs_message, general_message, now):
+async def notify_users(
+    czechia_message, 
+    belgium_message, 
+    france_message, 
+    netherlands_message, 
+    slovenia_message, 
+    france_sener_message, 
+    dumbs_message, 
+    general_message, 
+    now
+):
     chat_messages = {
         config["telegram_czech_chat_id"]: czechia_message,
         config["telegram_belgium_chat_id"]: belgium_message,
@@ -178,8 +185,6 @@ async def notify_users(czechia_message, belgium_message, france_message, netherl
         config["telegram_group_chat_id"]: general_message
     }
     
-    
-    
     for chat_id, message in chat_messages.items():
         if chat_id in last_message_files:
             last_message = load_json(last_message_files[chat_id])
@@ -189,8 +194,6 @@ async def notify_users(czechia_message, belgium_message, france_message, netherl
         elif message:  # Eğer mesaj boş değilse gönder
             await send_message(chat_id, message, now)
 
-
-
 async def scheduler():
     while True:
         now = datetime.now(config["utc_plus_3"])
@@ -199,7 +202,6 @@ async def scheduler():
         sleep_seconds = (next_run - datetime.now(config["utc_plus_3"])).total_seconds()
         logging.info("Sonraki Çalışma: " + next_run.strftime("%H:%M:%S"))
         logging.info('___________________________________________________________________\n')
-
         await asyncio.sleep(sleep_seconds)  # Belirlenen süre kadar bekle
         
 async def main():
@@ -208,4 +210,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

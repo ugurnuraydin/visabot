@@ -161,3 +161,4 @@ cython_debug/
 lastMessage.json
 last_dumbs_message.json
 last_general_message.json
+config.env
