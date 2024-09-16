@@ -24,6 +24,7 @@ config = {
     "telegram_slovenia_chat_id": os.getenv('TELEGRAM_SLOVENIA_CHAT_ID'),
     "telegram_fransa_sener_chat_id": os.getenv('TELEGRAM_FRANSA_SENER_CHAT_ID'),
     "telegram_dumbs_chat_id": os.getenv('TELEGRAM_DUMBS_CHAT_ID'),
+    "visa_api_url" : os.getenv('VISA_API_URL'),
     "chat_names": {
         os.getenv('TELEGRAM_GROUP_CHAT_ID'): "Genel Grup",
         os.getenv('TELEGRAM_PERSONAL_CHAT_ID'): "Kişisel Chat",
@@ -38,7 +39,6 @@ config = {
     "utc_plus_3": timezone(timedelta(hours=3))
     
 }
-print(f"Telegram Bot Token: {config["telegram_bot_token"]}")  # Token'ın çıktısını kontrol edin
 
 
 # Global last_message_files tanımı
@@ -89,7 +89,7 @@ async def send_message(chat_id, text, now):
 
 async def fetch_and_notify(now):
     logging.info('Checking appointments --' + now.strftime("%H:%M:%S"))
-    url = "https://api.schengenvisaappointments.com/api/visa-list/"
+    url = config["visa_api_url"]
     
     reset_lists()
     
