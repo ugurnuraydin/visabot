@@ -97,6 +97,13 @@ async def fetch_and_notify(now):
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
+        
+        # Boş veri kontrolü
+        if not data:  # Eğer data None, boş liste veya boş dictionary ise
+            logging.warning('API response is empty or null')
+            await send_message(config["telegram_personal_chat_id"], f"API'den dönen veri boş veya null: {url}", now )
+            return  # Eğer veri boşsa, devam etmeyi durdur
+        
         logging.info('Appointment data retrieved')
     except requests.RequestException as e:
         logging.error(f"Error fetching data: {e}")
