@@ -169,7 +169,7 @@ def filter_appointments(data):
         # France
         if mission_country == "france":
             france_list.append(item)
-            # france_sener_list.append(item)
+            france_sener_list.append(item)
 
         # Netherlands
         if mission_country == "netherlands":
